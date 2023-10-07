@@ -1,0 +1,15 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { PostgresSeeder } from '../../common/databases/postgresdb/postgresdb.seeder';
+import { {{NAME.CLASS}}Provider } from './{{NAME.FILE}}.pg.providers';
+import { {{NAME.CLASS}} } from './{{NAME.FILE}}.pg.entity';
+
+@Injectable()
+export class {{NAME.CLASS}}Seeder extends PostgresSeeder {
+  constructor(@Inject('{{NAME.CONSTANT}}_PG_PROVIDER') private {{NAME.VARIABLE}}Provider: {{NAME.CLASS}}Provider) {
+    super({{NAME.VARIABLE}}Provider);
+  }
+
+  seed() {
+    // TODO
+  }
+}

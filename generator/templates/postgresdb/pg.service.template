@@ -1,0 +1,193 @@
+import { Injectable, Inject } from '@nestjs/common';
+import { In, getConnection } from 'typeorm';
+import * as _ from 'lodash';
+import { GENERAL_CONFIG } from '../../common/configs/general.config';
+import { {{NAME.CLASS}} } from './{{NAME.FILE}}.pg.entity';
+import { {{NAME.CLASS}}Provider } from './{{NAME.FILE}}.pg.providers';
+import { Converter } from '../../common/utils/converter.util';
+import { GetQuery } from '../../common/utils/request.util';
+import { Error } from '../../common/utils/errors.util';
+import {
+  PostgresService,
+  GetOptions,
+} from '../../common/databases/postgresdb/postgresdb.service';
+
+@Injectable()
+export class {{NAME.CLASS}}Service implements PostgresService {
+  constructor(@Inject('{{NAME.CONSTANT}}_PG_PROVIDER') private {{NAME.VARIABLE}}Provider: {{NAME.CLASS}}Provider) {}
+
+  async create(data: Partial<{{NAME.CLASS}}>) {
+    const {{NAME.VARIABLE}} = new {{NAME.CLASS}}();
+    Object.assign({{NAME.VARIABLE}}, data);
+    return this.{{NAME.VARIABLE}}Provider.save({{NAME.VARIABLE}});
+  }
+
+  async getList(
+    query: GetQuery<Partial<{{NAME.CLASS}}>>,
+    options?: GetOptions<Partial<{{NAME.CLASS}}>>,
+  ) {
+    const { filter, sorts, page, limit } = query;
+
+    let mixedFilter;
+    if (options?.filter) {
+      mixedFilter = Converter.mixFilter('AND', [options.filter, filter]);
+    } else {
+      mixedFilter = filter;
+    }
+
+    const postgresQuery = Converter.toPostgresQuery<{{NAME.CLASS}}>({
+      filter: mixedFilter,
+      sorts,
+      page,
+      limit,
+    });
+
+    const relations = {};
+    const metadata = getConnection().getMetadata({{NAME.CLASS}});
+    if (options?.relations) {
+      if (options.relations === true) {
+        for (const relation of metadata.relations) {
+          relations[relation.propertyName] = true;
+        }
+      }
+      if (Array.isArray(options.relations) && options.relations.length > 0) {
+        for (const relation of options.relations) {
+          relations[relation] = true;
+        }
+      }
+    }
+
+    const [{{NAMES.VARIABLE}}, count] = await this.{{NAME.VARIABLE}}Provider
+      .findAndCount({
+        ...postgresQuery,
+        relations,
+        cache: options?.cache || GENERAL_CONFIG.ENABLE_CACHE,
+      })
+      .catch((err) => {
+        throw new Error('Error get list {{NAMES.WORD}}', err);
+      });
+
+    return Converter.toPaginate(
+      { records: {{NAMES.VARIABLE}}, count },
+      query.page,
+      query.limit,
+    );
+  }
+
+  async getOne(id: string, options?: GetOptions<Partial<{{NAME.CLASS}}>>) {
+    const metadata = getConnection().getMetadata({{NAME.CLASS}});
+    const relations = {};
+    if (options?.relations) {
+      if (options.relations === true) {
+        for (const relation of metadata.relations) {
+          relations[relation.propertyName] = true;
+        }
+      }
+      if (Array.isArray(options.relations) && options.relations.length > 0) {
+        for (const relation of options.relations) {
+          relations[relation] = true;
+        }
+      }
+    }
+
+    return this.{{NAME.VARIABLE}}Provider.findOne({
+      where: { id },
+      relations,
+      cache: options?.cache || GENERAL_CONFIG.ENABLE_CACHE,
+    });
+  }
+
+  async getOneBy(
+    property: keyof {{NAME.CLASS}},
+    value: any,
+    options?: GetOptions<Partial<{{NAME.CLASS}}>>,
+  ) {
+    const metadata = getConnection().getMetadata({{NAME.CLASS}});
+    const relations = {};
+    if (options?.relations) {
+      if (options.relations === true) {
+        for (const relation of metadata.relations) {
+          relations[relation.propertyName] = true;
+        }
+      }
+      if (Array.isArray(options.relations) && options.relations.length > 0) {
+        for (const relation of options.relations) {
+          relations[relation] = true;
+        }
+      }
+    }
+
+    return this.{{NAME.VARIABLE}}Provider.findOne({
+      where: { [property]: value },
+      relations,
+      cache: options?.cache || GENERAL_CONFIG.ENABLE_CACHE,
+    });
+  }
+
+  async updateById(id: string, data: Partial<{{NAME.CLASS}}>) {
+    const result = await this.{{NAME.VARIABLE}}Provider.update(id, data);
+    if (result.affected != 1) {
+      throw new Error('Error update {{NAME.WORD}}');
+    }
+    return this.{{NAME.VARIABLE}}Provider.findOne({ where: { id: id }, withDeleted: true });
+  }
+
+  async updateList(ids: string[], data: Partial<{{NAME.CLASS}}>) {
+    const result = await this.{{NAME.VARIABLE}}Provider.update({ id: In(ids) }, data);
+    if (result.affected < ids.length) {
+      throw new Error('Error update list {{NAMES.WORD}}');
+    }
+    return this.{{NAME.VARIABLE}}Provider.find({
+      where: { id: In(ids) },
+      withDeleted: true,
+    });
+  }
+
+  async removeById(id: string) {
+    return this.{{NAME.VARIABLE}}Provider.delete(id).then((result) => result.affected === 1);
+  }
+
+  async removeList(ids: string[]) {
+    return this.{{NAME.VARIABLE}}Provider
+      .delete({ id: In(ids) })
+      .then((result) => result.affected);
+  }
+
+  async checkUniqueConstraint(data: Partial<{{NAME.CLASS}}>, exceptId?: string) {
+    const metadata = getConnection().getMetadata({{NAME.CLASS}});
+    let properties = [];
+    for (const unique of metadata.uniques) {
+      properties = properties.concat(unique.givenColumnNames);
+    }
+    properties = _.union(properties).filter((property) =>
+      Object.keys(data).includes(property),
+    );
+    const where = properties.map((property) => {
+      return { [property]: data[property] };
+    });
+    const records = await this.{{NAME.VARIABLE}}Provider.findBy(where);
+
+    const errors = properties
+      .map((property) => {
+        const record = records.find(
+          (record) =>
+            record.id != exceptId && record[property] == data[property],
+        );
+        if (record) {
+          return {
+            name: property,
+            value: data[property],
+            message: `${property} "${data[property]}" already existed`,
+          };
+        }
+      })
+      .filter((err) => err);
+    return errors;
+  }
+
+  async checkExistById(id: string) {
+    return this.{{NAME.VARIABLE}}Provider
+      .count({ where: { id: id } })
+      .then((count) => count > 0);
+  }
+}

@@ -1,0 +1,14 @@
+import { Module } from '@nestjs/common';
+import { PostgresDBModule } from '../../common/databases/postgresdb/postgresdb.module';
+import { GuardModule } from '../../common/guards/guard.module';
+import { UploaderModule } from '../../common/uploaders/uploader.module';
+import { {{NAME.CLASS}}Service } from './{{NAME.FILE}}.pg.service';
+import { {{NAME.VARIABLE}}Providers } from './{{NAME.FILE}}.pg.providers';
+import { {{NAME.CLASS}}Controller } from './{{NAME.FILE}}.controller';
+
+@Module({
+  imports: [PostgresDBModule, UploaderModule, GuardModule],
+  providers: [...{{NAME.VARIABLE}}Providers, {{NAME.CLASS}}Service],
+  controllers: [{{NAME.CLASS}}Controller],
+})
+export class {{NAME.CLASS}}Module {}

@@ -1,0 +1,12 @@
+import { DataSource, Repository } from 'typeorm';
+import { {{NAME.CLASS}} } from './{{NAME.FILE}}.pg.entity';
+
+export const {{NAME.VARIABLE}}Providers = [
+  {
+    provide: '{{NAME.CONSTANT}}_PG_PROVIDER',
+    useFactory: (dataSource: DataSource) => dataSource.getRepository({{NAME.CLASS}}),
+    inject: ['POSTGRES_PROVIDER'],
+  },
+];
+
+export type {{NAME.CLASS}}Provider = Repository<{{NAME.CLASS}}>;

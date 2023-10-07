@@ -1,0 +1,5 @@
+
+              import { ApiPathOptions } from '../../../common/docs/docs.entity';
+              
+              module.exports = {"/tests/":{"get":{"tags":["Test"],"description":"action desccription","operationId":"getList","summary":"getList","security":[{"BearerAuth":[]}],"parameters":[{"in":"query","description":"paramester description","required":false,"content":{"application/json":{"schema":{"properties":{"filter":{"properties":{"type":{"enum":["AND","OR"],"type":"string"},"filters":{"items":{"properties":{"property":{"type":"string"},"operator":{"type":"string","enum":["eq","lt","lte","gt","gte","ne","in","like","between"]},"value":{}},"type":"object","required":["property","operator"]},"type":"array"}},"type":"object","required":["type","filters"]},"sorts":{"items":{"type":"string"},"type":"array"},"limit":{"minimum":1,"type":"number"},"page":{"minimum":1,"type":"number"}},"type":"object"}}}}]}}} as ApiPathOptions;
+            

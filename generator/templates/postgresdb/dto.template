@@ -1,0 +1,90 @@
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
+import { {{NAME.CLASS}} } from './{{NAME.FILE}}.pg.entity';
+
+// ========= Create ========= //
+export class {{NAME.CLASS}}CreateRequestProps implements Partial<{{NAME.CLASS}}> {
+  @IsNotEmpty()
+  @Length(1, 255)
+  name?: string = undefined;
+
+  @IsOptional()
+  @Length(1, 255)
+  description?: string = undefined;
+}
+export class {{NAME.CLASS}}CreateResponseProps implements Partial<{{NAME.CLASS}}> {
+  id?: string = undefined;
+
+  name?: string = undefined;
+
+  description: string = undefined;
+}
+// ========= GetById ========= //
+export class {{NAME.CLASS}}GetByIdResponseProps implements Partial<{{NAME.CLASS}}> {
+  id: string = undefined;
+
+  name?: string = undefined;
+
+  description?: string = undefined;
+
+  createdAt?: Date = undefined;
+
+  createdBy?: string = undefined;
+
+  updatedAt?: Date = undefined;
+
+  updatedBy?: string = undefined;
+}
+
+// ========= GetList ========= //
+export class {{NAME.CLASS}}GetListRequestProps implements Partial<{{NAME.CLASS}}> {
+  name?: string = undefined;
+
+  description?: string = undefined;
+
+  createdAt?: Date = undefined;
+}
+export class {{NAME.CLASS}}GetListResponseProps implements Partial<{{NAME.CLASS}}> {
+  id: string = undefined;
+
+  name?: string = undefined;
+
+  description?: string = undefined;
+
+  createdAt?: Date = undefined;
+}
+
+// ========= Updtate ========= //
+export class {{NAME.CLASS}}UpdateRequestProps implements Partial<{{NAME.CLASS}}> {
+  @IsNotEmpty()
+  @Length(1, 255)
+  name?: string = undefined;
+
+  @IsOptional()
+  @Length(1, 255)
+  description?: string = undefined;
+}
+export class {{NAME.CLASS}}UpdateResponseProps implements Partial<{{NAME.CLASS}}> {
+  id?: string = undefined;
+
+  name?: string = undefined;
+
+  description?: string = undefined;
+
+  email: string = undefined;
+}
+
+// ========= Delete ========= //
+export class {{NAME.CLASS}}DeleteRequestProps {
+  @IsString({
+    each: true,
+  })
+  ids: string[] = undefined;
+}
+
+export class {{NAME.CLASS}}DeleteResponseProps implements Partial<{{NAME.CLASS}}> {
+  id?: string = undefined;
+
+  deleted?: boolean = undefined;
+
+  deletedBy?: string = undefined;
+}

@@ -1,0 +1,18 @@
+{
+  "apps": [
+    {
+      "name": "test_api_nestjs",
+      "script": "./src/main.ts",
+      "instances": 1,
+      "exec_mode": "cluster",
+      "watch": false,
+      "ignore_watch": ["node_modules", "public", "logs", "migrations", "tmp", "storage"],
+      "interpreter": "node",
+      "interpreter_args": "--inspect",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss.SSS Z",
+      "kill_timeout": 3000,
+      "wait_ready": false,
+      "listen_timeout": 3000
+    }
+  ]
+}

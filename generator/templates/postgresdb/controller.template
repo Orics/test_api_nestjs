@@ -1,0 +1,164 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Put,
+  Delete,
+} from '@nestjs/common';
+import 'reflect-metadata';
+import * as _ from 'lodash';
+import { {{NAME.CLASS}}Service } from './{{NAME.FILE}}.pg.service';
+import {
+  {{NAME.CLASS}}CreateRequestProps,
+  {{NAME.CLASS}}CreateResponseProps,
+  {{NAME.CLASS}}GetByIdResponseProps,
+  {{NAME.CLASS}}GetListRequestProps,
+  {{NAME.CLASS}}GetListResponseProps,
+  {{NAME.CLASS}}UpdateRequestProps,
+  {{NAME.CLASS}}UpdateResponseProps,
+  {{NAME.CLASS}}DeleteRequestProps,
+  {{NAME.CLASS}}DeleteResponseProps,
+} from './{{NAME.FILE}}.dto';
+import { Filter, GetQuery } from '../../common/utils/request.util';
+import {
+  ResponseEmpty,
+  ResponseOne,
+  ResponseListWithPagination,
+  ResponseList,
+} from '../../common/utils/response.util';
+import {
+  InternalServerErrorResponse,
+  NotFoundErrorResponse,
+  InvalidErrorResponse,
+} from '../../common/utils/errors.util';
+import {
+  Identity,
+  UseAuthPermissions,
+} from '../../common/guards/guard.decorator';
+import { AuthIdentity } from '../auth/auth.dto';
+import { {{NAME.CLASS}} } from '../{{NAME.FILE}}/{{NAME.FILE}}.pg.entity';
+
+@Controller('{{NAMES.CODE}}')
+export class {{NAME.CLASS}}Controller {
+  constructor(private readonly {{NAME.VARIABLE}}Service: {{NAME.CLASS}}Service) {}
+
+  @Post()
+  @UseAuthPermissions([['{{NAME.CONSTANT}}', 'CREATE']])
+  async create(
+    @Body() data: {{NAME.CLASS}}CreateRequestProps,
+    @Identity() identity: AuthIdentity,
+  ) {
+    const errors = await this.{{NAME.VARIABLE}}Service.checkUniqueConstraint(data);
+    if (errors && errors.length > 0) {
+      throw new InvalidErrorResponse(errors);
+    }
+    const {{NAME.VARIABLE}} = await this.{{NAME.VARIABLE}}Service
+      .create({
+        ...data,
+        createdBy: identity?.id,
+      })
+      .catch((err) => {
+        throw new InternalServerErrorResponse('Error create {{NAME.WORD}}', err);
+      });
+    return new ResponseOne({{NAME.VARIABLE}}, {{NAME.CLASS}}CreateResponseProps, 201);
+  }
+
+  @Get()
+  @UseAuthPermissions([['{{NAME.CONSTANT}}', 'GET_LIST']])
+  async getList(
+    @Query() query: GetQuery<{{NAME.CLASS}}GetListRequestProps>,
+    @Identity() identity: AuthIdentity,
+  ) {
+    const filter: Filter<{{NAME.CLASS}}> = {
+      type: 'AND',
+      filters: [
+        {
+          property: 'createdBy',
+          operator: 'eq',
+          value: identity.id,
+        },
+      ],
+    };
+    const result = await this.{{NAME.VARIABLE}}Service
+      .getList(query, { filter })
+      .catch((err) => {
+        throw new InternalServerErrorResponse('Error get list {{NAMES.WORD}}', err);
+      });
+    return new ResponseListWithPagination(result, {{NAME.CLASS}}GetListResponseProps, 200);
+  }
+
+  @Get('/:id')
+  @UseAuthPermissions([['{{NAME.CONSTANT}}', 'GET_DETAIL']])
+  async getOne(@Param('id') id: string, @Identity() identity: AuthIdentity) {
+    const {{NAME.VARIABLE}} = await this.{{NAME.VARIABLE}}Service
+      .getOne(id, { relations: true })
+      .catch((err) => {
+        throw new InternalServerErrorResponse('Error get {{NAME.WORD}}', err);
+      });
+    if ({{NAME.VARIABLE}}) {
+      return new ResponseOne({{NAME.VARIABLE}}, {{NAME.CLASS}}GetByIdResponseProps, 200);
+    } else {
+      return new ResponseEmpty();
+    }
+  }
+
+  @Put('/:id')
+  @UseAuthPermissions([['{{NAME.CONSTANT}}', 'UPDATE']])
+  async update(
+    @Param('id') id: string,
+    @Body() data: {{NAME.CLASS}}UpdateRequestProps,
+    @Identity() identity: AuthIdentity,
+  ) {
+    const existed = await this.{{NAME.VARIABLE}}Service.checkExistById(id).catch((err) => {
+      throw new InternalServerErrorResponse('Error check {{NAME.WORD}} id', err);
+    });
+    if (!existed) {
+      throw new NotFoundErrorResponse('{{NAME.WORD}}');
+    }
+    const errors = await this.{{NAME.VARIABLE}}Service.checkUniqueConstraint(data, id);
+    if (errors && errors.length > 0) {
+      throw new InvalidErrorResponse(errors);
+    }
+    const result = await this.{{NAME.VARIABLE}}Service
+      .updateById(id, { ...data, updatedBy: identity?.id })
+      .catch((err) => {
+        throw new InternalServerErrorResponse('Error update {{NAME.WORD}}', err);
+      });
+    return new ResponseOne(result, {{NAME.CLASS}}UpdateResponseProps, 200);
+  }
+
+  @Delete('/:id')
+  @UseAuthPermissions([['{{NAME.CONSTANT}}', 'DELETE']])
+  async deleteOne(@Param('id') id: string, @Identity() identity: AuthIdentity) {
+    const existed = await this.{{NAME.VARIABLE}}Service.checkExistById(id).catch((err) => {
+      throw new InternalServerErrorResponse('Error check {{NAME.WORD}} id', err);
+    });
+    if (!existed) {
+      throw new NotFoundErrorResponse('{{NAME.WORD}}');
+    }
+    const result = await this.{{NAME.VARIABLE}}Service.updateById(id, {
+      deleted: true,
+      deletedAt: new Date(),
+      deletedBy: identity?.id,
+    });
+    return new ResponseOne(result, {{NAME.CLASS}}DeleteResponseProps, 200);
+  }
+
+  @Delete()
+  @UseAuthPermissions([['{{NAME.CONSTANT}}', 'DELETE']])
+  async deleteList(
+    @Body() data: {{NAME.CLASS}}DeleteRequestProps,
+    @Identity() identity: AuthIdentity,
+  ) {
+    const { ids } = data;
+    const result = await this.{{NAME.VARIABLE}}Service.updateList(ids, {
+      deleted: true,
+      deletedAt: new Date(),
+      deletedBy: identity?.id,
+    });
+    return new ResponseList(result, {{NAME.CLASS}}DeleteResponseProps, 200);
+  }
+}
