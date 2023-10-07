@@ -7,6 +7,8 @@ import { ValidatePipe } from './common/pipes/validate.pipe';
 import { GENERAL_CONFIG } from './common/configs/general.config';
 
 dotenv.config();
+console.log('======= Environment =======');
+console.log(process.env);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
